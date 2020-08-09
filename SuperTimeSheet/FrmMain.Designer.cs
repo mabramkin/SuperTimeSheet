@@ -341,10 +341,10 @@
             // btnAddTask
             // 
             this.btnAddTask.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.btnAddTask.Location = new System.Drawing.Point(456, 240);
+            this.btnAddTask.Location = new System.Drawing.Point(388, 240);
             this.btnAddTask.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnAddTask.Name = "btnAddTask";
-            this.btnAddTask.Size = new System.Drawing.Size(170, 33);
+            this.btnAddTask.Size = new System.Drawing.Size(209, 33);
             this.btnAddTask.TabIndex = 5;
             this.btnAddTask.Text = "&Добавить задачу";
             this.btnAddTask.UseVisualStyleBackColor = true;
@@ -491,10 +491,10 @@
             // btnUpdateTask
             // 
             this.btnUpdateTask.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.btnUpdateTask.Location = new System.Drawing.Point(632, 240);
+            this.btnUpdateTask.Location = new System.Drawing.Point(603, 240);
             this.btnUpdateTask.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnUpdateTask.Name = "btnUpdateTask";
-            this.btnUpdateTask.Size = new System.Drawing.Size(170, 33);
+            this.btnUpdateTask.Size = new System.Drawing.Size(199, 33);
             this.btnUpdateTask.TabIndex = 19;
             this.btnUpdateTask.Text = "&Обновить задачу";
             this.btnUpdateTask.UseVisualStyleBackColor = true;

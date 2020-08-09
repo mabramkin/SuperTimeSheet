@@ -66,6 +66,8 @@
   <ItemGroup>
     <Compile Include="Classes\FileUtilities.cs" />
     <Compile Include="Classes\GridCellUtilities.cs" />
+    <Compile Include="Classes\GridColumnIndexes.cs" />
+    <Compile Include="Classes\GridRowUtilities.cs" />
     <Compile Include="Classes\NumberUtilities.cs" />
     <Compile Include="Classes\PersistenceUtilities.cs" />
     <Compile Include="Classes\ProjectPrefix.cs" />

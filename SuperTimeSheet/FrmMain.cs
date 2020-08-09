@@ -40,6 +40,13 @@ namespace SuperTimeSheet
         public const string SETTINGS_KEY_PROJECTS = "Projects";
         public const string SETTINGS_KEY_PREFIXES = "Prefixes";
 
+        public const string DEFAULT_FILENAME_POSTFIX = "_SuperTimeSheet.supts";
+
+        //public const int COLUMN_INDEX_TASK_DATE = 0;
+        //public const int COLUMN_INDEX_TASK_NAME = 1;
+        //public const int COLUMN_INDEX_TASK_DURATION = 2;
+        //public const int COLUMN_INDEX_TASK_PROJECT = 3;
+
         public double TotalTasksDurationInHours
         {
             get { return totalTasksDurationInHours; }
@@ -101,25 +108,30 @@ namespace SuperTimeSheet
         /// <param name="taskName">The name (title) of the task</param>
         /// <param name="taskDuration">The task duration</param>
         /// <returns></returns>
-        DataGridViewRow GetNewRowForGrid(string taskDate, string taskName, string taskDuration)
+        private DataGridViewRow GetNewRowForGrid(string taskDate, string taskName, string taskDuration)
         {
             return GetNewRowForGrid(taskDate, taskName, taskDuration, "");
         }
 
-        DataGridViewRow GetNewRowForAdding()
+        private string GetTaskNameWithPrefix()
         {
-
             string prefix = (string)cboTaskPrefix.SelectedItem;
             string taskName;
             if ("<без префикса>".Equals(prefix) || prefix == null)
             {
                 taskName = txtTaskName.Text;
-            } else
+            }
+            else
             {
                 taskName = prefix + ". " + txtTaskName.Text;
             }
+            return taskName;
+        }
 
-            
+        private DataGridViewRow GetNewRowForAdding()
+        {
+
+            string taskName = GetTaskNameWithPrefix();
             string taskDate = dtTaskDate.Value.ToShortDateString();
             string taskDuration;
 
@@ -189,7 +201,7 @@ namespace SuperTimeSheet
                     continue;
                 }
 
-                DataGridViewCell cellDuration = cells[2];
+                DataGridViewCell cellDuration = cells[GridColumnIndexes.COLUMN_INDEX_TASK_DURATION];
                 double duration = 0.0d;
                 try
                 {
@@ -238,21 +250,38 @@ namespace SuperTimeSheet
             //}
         }
 
+
+        /// <summary>
+        /// Gets the selected row in grid or null if no row selected
+        /// </summary>
+        /// <returns>DataGridViewRow object for selected row or null if no row selected</returns>
+        private DataGridViewRow GetSelectedRow()
+        {
+            DataGridViewRow selectedRow = null;
+            DataGridViewSelectedRowCollection colSelectedRows = gridTasks.SelectedRows;
+            if (colSelectedRows.Count == 1)
+            {
+                selectedRow = colSelectedRows[0];
+            }
+            return selectedRow;
+        }
+
         private TimeSheetTask GetSelectedTask()
         {
             TimeSheetTask result = null;
 
-            DataGridViewSelectedRowCollection colSelectedRows = gridTasks.SelectedRows;
-            if (colSelectedRows.Count > 0)
+            DataGridViewRow selectedRow = GetSelectedRow();
+            
+            if (selectedRow != null)
             {
-                DataGridViewRow selectedRow = colSelectedRows[0];
                 if (!selectedRow.IsNewRow)
                 {
-                    string taskDate = (string)selectedRow.Cells[0].Value;
-                    string taskName = (string)selectedRow.Cells[1].Value;
-                    string taskDuration = (string)selectedRow.Cells[2].Value;
-                    string taskProject = (string)selectedRow.Cells[3].Value;
+                    string taskDate = GridRowUtilities.GetTaskDateFromGridRow(selectedRow);
+                    string taskName = GridRowUtilities.GetTaskNameFromGridRow(selectedRow);
+                    string taskDuration = GridRowUtilities.GetTaskDurationFromGridRow(selectedRow);
+                    string taskProject = GridRowUtilities.GetTaskProjectFromGridRow(selectedRow);
 
+                    result = new TimeSheetTask();
                     result.TaskStringDate = taskDate;
                     result.TaskName = taskName;
                     result.TaskDuration = taskDuration;
@@ -265,7 +294,18 @@ namespace SuperTimeSheet
 
         private void BtnUpdateTask_Click(object sender, EventArgs e)
         {
-            TimeSheetTask selectedTask = GetSelectedTask();
+            //TimeSheetTask selectedTask = GetSelectedTask();
+            DataGridViewRow selectedRow = GetSelectedRow();
+            if (selectedRow != null)
+            {
+                selectedRow.Cells[GridColumnIndexes.COLUMN_INDEX_TASK_DATE].Value = dtTaskDate.Value.ToShortDateString();
+                selectedRow.Cells[GridColumnIndexes.COLUMN_INDEX_TASK_NAME].Value = GetTaskNameWithPrefix();
+                selectedRow.Cells[GridColumnIndexes.COLUMN_INDEX_TASK_DURATION].Value = txtTaskDuration.Text;
+                selectedRow.Cells[GridColumnIndexes.COLUMN_INDEX_TASK_PROJECT].Value = (string)cboProject.SelectedItem;
+
+            }
+
+            //MessageBox.Show("Здесь идёт сообщение");
         }
 
         private void BtnAddTask_Click(object sender, EventArgs e)
@@ -382,17 +422,17 @@ namespace SuperTimeSheet
                 }
             }
 
-            if (projects == null)
-            {
-                cboProject.Items.Add("Развитие. Команда Alpha");
-                cboProject.Items.Add("Развитие. Команда Beta");
-            }
+            //if (projects == null)
+            //{
+            //    cboProject.Items.Add("Развитие. Команда Alpha");
+            //    cboProject.Items.Add("Развитие. Команда Beta");
+            //}
 
-            if (prefixes == null)
-            {
-                cboTaskPrefix.Items.Add("ДЕЖ");
-                cboTaskPrefix.Items.Add("ПЛАН");
-            }
+            //if (prefixes == null)
+            //{
+            //    cboTaskPrefix.Items.Add("ДЕЖ");
+            //    cboTaskPrefix.Items.Add("ПЛАН");
+            //}
         }
 
         private void LoadSettings()
@@ -493,13 +533,22 @@ namespace SuperTimeSheet
                         string prefix = selectedTaskName.Substring(0, posDot);
                         if (prefix != null)
                         {
+                            bool prefixFound = false;
                             foreach (ProjectPrefix pref in projectPrefixes)
                             {
                                 if (prefix.Equals(pref.Prefix))
                                 {
                                     cboTaskPrefix.SelectedItem = prefix;
+                                    txtPrefixDescription.Text = pref.Description;
+                                    prefixFound = true;
                                     break;
                                 }
+                            }
+
+                            if (!prefixFound)
+                            {
+                                cboTaskPrefix.SelectedItem = null;
+                                txtPrefixDescription.Text = "";
                             }
                         }
                     } else
@@ -598,51 +647,54 @@ namespace SuperTimeSheet
                 {
                     string[] cellData = fileLine.Split('|');
 
+                    string taskDate = "";
+                    string taskName = "";
+                    string taskDuration = "";
+                    string taskProject = "";
+
                     // Old format for files - without project specification
-                    if (cellData != null && cellData.Length == 3)
+                    if (cellData != null && cellData.Length >= 3 && cellData.Length <= 4)
                     {
                         // ok, all cells present
-                        string taskDate = cellData[0];
-                        string taskName = cellData[1];
-                        string taskDuration = cellData[2];
-
-                        DataGridViewRow newRow = GetNewRowForGrid(taskDate, taskName, taskDuration);
-                        newRow.Tag = taskName;
-                        gridTasks.Rows.Add(newRow);
+                        taskDate = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DATE];
+                        taskName = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_NAME];
+                        taskDuration = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DURATION];
                     }
-                    // new format for files - with project specification
-                    else if (cellData != null && cellData.Length == 4)
+                    if (cellData != null && cellData.Length == 4)
                     {
-                        // ok, all cells present
-                        string taskDate = cellData[0];
-                        string taskName = cellData[1];
-                        string taskDuration = cellData[2];
-                        string taskProject = cellData[3];
-
-                        DataGridViewRow newRow = GetNewRowForGrid(taskDate, taskName, taskDuration);
-                        newRow.Tag = taskName;
-                        gridTasks.Rows.Add(newRow);
+                        taskProject = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_PROJECT];
                     }
+
+                    DataGridViewRow newRow = GetNewRowForGrid(taskDate, taskName, taskDuration);
+                    newRow.Tag = taskName;
+                    gridTasks.Rows.Add(newRow);                    
                 }
 
-                RefreshTotalDuration();
-                IsDataChanged = false;
+                RefreshDataAfterLoadFromFile(fileName);
+                PutSettingsValues(settingsLoadMode);
+            }
+        }
 
-                CurrentFileName = fileName;
-                RefreshDialogTitle();
-                
-                if (settings[SETTINGS_KEY_LAST_FILE_NAME] == null)
+        private void RefreshDataAfterLoadFromFile(string fileName)
+        {
+            RefreshTotalDuration();
+            IsDataChanged = false;
+            CurrentFileName = fileName;
+            RefreshDialogTitle();
+        }
+
+        private void PutSettingsValues(bool settingsLoadMode)
+        {
+            if (settings[SETTINGS_KEY_LAST_FILE_NAME] == null)
+            {
+                settings.Add(SETTINGS_KEY_LAST_FILE_NAME, CurrentFileName);
+            }
+            else
+            {
+                if (!settingsLoadMode)
                 {
-                    settings.Add(SETTINGS_KEY_LAST_FILE_NAME, CurrentFileName);
-                } else
-                {
-                    if (!settingsLoadMode)
-                    {
-                        settings[SETTINGS_KEY_LAST_FILE_NAME] = CurrentFileName;
-                    }
-                    
+                    settings[SETTINGS_KEY_LAST_FILE_NAME] = CurrentFileName;
                 }
-                
             }
         }
 
@@ -674,14 +726,15 @@ namespace SuperTimeSheet
             } else
             {
                 this.Text = "SuperTimeSheet - [Безымянный]";
-            }
-            
+            }            
         }
 
-
+        /// <summary>
+        /// Method that handles 'Save As' command
+        /// </summary>
         private void SaveDataAs()
         {
-            string fileName = DateTime.Now.ToShortDateString() + "_SuperTimeSheet.supts";
+            string fileName = DateTime.Now.ToShortDateString() + DEFAULT_FILENAME_POSTFIX;
             saveFileDialog.FileName = fileName;
             DialogResult dlgResult = saveFileDialog.ShowDialog();
 
@@ -689,8 +742,6 @@ namespace SuperTimeSheet
             {
                 string fileNameFinal = saveFileDialog.FileName;
                 SaveDataToFile(fileNameFinal);
-                // Save file
-                //MessageBox.Show("file saved");
             }
         }
 
