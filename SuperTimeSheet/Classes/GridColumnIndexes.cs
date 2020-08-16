@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SuperTimeSheet.Classes
+﻿namespace SuperTimeSheet.Classes
 {
+    /// <summary>
+    /// Class that hold numeric representation for columns in the DataGridView
+    /// </summary>
     public class GridColumnIndexes
     {
         public const int COLUMN_INDEX_TASK_DATE = 0;

@@ -2,6 +2,9 @@
 
 namespace SuperTimeSheet.Classes
 {
+    /// <summary>
+    /// Utility methods for working with numbers
+    /// </summary>
     public class NumberUtilities
     {
         /// <summary>

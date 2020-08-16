@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
-using System.Collections.Generic;
 using SuperTimeSheet.Classes;
 
 namespace SuperTimeSheet
@@ -39,13 +33,10 @@ namespace SuperTimeSheet
         public const string SETTINGS_KEY_LAST_FILE_NAME = "LastFileName";
         public const string SETTINGS_KEY_PROJECTS = "Projects";
         public const string SETTINGS_KEY_PREFIXES = "Prefixes";
-
         public const string DEFAULT_FILENAME_POSTFIX = "_SuperTimeSheet.supts";
-
-        //public const int COLUMN_INDEX_TASK_DATE = 0;
-        //public const int COLUMN_INDEX_TASK_NAME = 1;
-        //public const int COLUMN_INDEX_TASK_DURATION = 2;
-        //public const int COLUMN_INDEX_TASK_PROJECT = 3;
+        private const string STR_START_TIMER = "&Запустить таймер";
+        private const string STR_STOP_TIMER = "&Остановить таймер";
+        private const string MSG_ERR_CANNOT_START_TIMER_WITH_FILLED_DURATION = "Отсчёт времени по задаче доступен при пустом поле длительности задачи. Очистите поле и повторно запустите таймер.";
 
         public double TotalTasksDurationInHours
         {
@@ -169,9 +160,7 @@ namespace SuperTimeSheet
             {
                 newTaskRow = GetNewRowForGrid(taskDate, taskName, taskDuration);
             }
-
-            
-            //newTaskRow.Cells.Add(cellNewTaskDuration);
+          
             newTaskRow.Tag = txtTaskName.Text;
 
             return newTaskRow;
@@ -229,13 +218,6 @@ namespace SuperTimeSheet
             }
             lblTotalDuration.Text = TotalTasksDurationInHours.ToString();
         }
-
-
-
-        //private string GetFullTaskNameWithPrefix()
-        //{
-
-        //}
 
         private void UpdateTaskFromControls()
         {
@@ -421,18 +403,6 @@ namespace SuperTimeSheet
                     }
                 }
             }
-
-            //if (projects == null)
-            //{
-            //    cboProject.Items.Add("Развитие. Команда Alpha");
-            //    cboProject.Items.Add("Развитие. Команда Beta");
-            //}
-
-            //if (prefixes == null)
-            //{
-            //    cboTaskPrefix.Items.Add("ДЕЖ");
-            //    cboTaskPrefix.Items.Add("ПЛАН");
-            //}
         }
 
         private void LoadSettings()
@@ -513,7 +483,7 @@ namespace SuperTimeSheet
                 btnRemoveSelected.Enabled = (gridTasks.SelectedRows != null);
 
                 DateTime selectedTaskDate;
-                if (selectedRow.Cells[0].Value != null)
+                if (selectedRow.Cells[0].Value != null && !"".Equals(selectedRow.Cells[0].Value))
                 {
                     selectedTaskDate = DateTime.Parse((string)selectedRow.Cells[0].Value);
                 } else
@@ -604,10 +574,6 @@ namespace SuperTimeSheet
             }
             //MessageBox.Show("ColIndex = " + columnIndex.ToString() + ", RowIndex = " + rowIndex.ToString(), "Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-
-
-
-
 
         private void GridTasks_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
@@ -811,10 +777,7 @@ namespace SuperTimeSheet
                     string fileName = openFileDialog.FileName;
                     ReadDataFromFile(fileName, false);
                 }
-            }
-            
-
-
+            }            
         }
 
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -841,12 +804,12 @@ namespace SuperTimeSheet
                     timerForTask.Enabled = true;
                     taskStartTime = DateTime.Now;
                     txtTaskDuration.Enabled = false;
-                    btnStartTimer.Text = "&Остановить таймер";
+                    btnStartTimer.Text = STR_STOP_TIMER;
                     isTimerStarted = true;
                 }
                 else
                 {
-                    MessageBox.Show("Отсчёт времени по задаче доступен при пустом поле длительности задачи. Очистите поле и повторно запустите таймер.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    MessageBox.Show(MSG_ERR_CANNOT_START_TIMER_WITH_FILLED_DURATION, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
             else
@@ -876,7 +839,7 @@ namespace SuperTimeSheet
                     txtTaskDuration.Text = Convert.ToString(dMinutes);
                 }
                 
-                btnStartTimer.Text = "&Запустить таймер";
+                btnStartTimer.Text = STR_START_TIMER;
                 isTimerStarted = false;
             }
             
