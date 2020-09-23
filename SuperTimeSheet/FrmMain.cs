@@ -601,10 +601,13 @@ namespace SuperTimeSheet
 
         private void ReadDataFromFile(string fileName, bool settingsLoadMode)
         {
+            
             if (FileUtilities.CheckFileNameAndShowErrorIfNull(fileName))
             {
                 return;
             }
+
+            gridTasks.Rows.Clear();
 
             string[] fileLines = File.ReadAllLines(fileName);
             if (fileLines != null && fileLines.Length > 0)
@@ -618,22 +621,43 @@ namespace SuperTimeSheet
                     string taskDuration = "";
                     string taskProject = "";
 
-                    // Old format for files - without project specification
-                    if (cellData != null && cellData.Length >= 3 && cellData.Length <= 4)
+                    if (cellData != null)
                     {
-                        // ok, all cells present
-                        taskDate = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DATE];
-                        taskName = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_NAME];
-                        taskDuration = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DURATION];
-                    }
-                    if (cellData != null && cellData.Length == 4)
-                    {
-                        taskProject = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_PROJECT];
+                        if (cellData.Length >= 3)
+                        {
+                            taskDate = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DATE];
+                            taskName = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_NAME];
+                            taskDuration = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DURATION];
+                        }
+                        if (cellData.Length == 4)
+                        {
+                            taskProject = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_PROJECT];
+                        }
+
+                        if (cellData.Length >= 3)
+                        {
+                            DataGridViewRow newRow = GetNewRowForGrid(taskDate, taskName, taskDuration, taskProject);
+                            newRow.Tag = taskName;
+                            gridTasks.Rows.Add(newRow);
+                        }                        
                     }
 
-                    DataGridViewRow newRow = GetNewRowForGrid(taskDate, taskName, taskDuration);
-                    newRow.Tag = taskName;
-                    gridTasks.Rows.Add(newRow);                    
+                    // Old format for files - without project specification
+                    //if (cellData != null && cellData.Length >= 3 && cellData.Length < 4)
+                    //{
+                    //    // ok, all cells present
+                    //    taskDate = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DATE];
+                    //    taskName = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_NAME];
+                    //    taskDuration = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DURATION];
+                    //}
+                    //if (cellData != null && cellData.Length == 4)
+                    //{
+                    //    taskDate = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DATE];
+                    //    taskName = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_NAME];
+                    //    taskDuration = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_DURATION];
+                    //    taskProject = cellData[GridColumnIndexes.COLUMN_INDEX_TASK_PROJECT];
+                    //}
+                  
                 }
 
                 RefreshDataAfterLoadFromFile(fileName);
